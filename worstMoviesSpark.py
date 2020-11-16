@@ -4,7 +4,7 @@ import csv
 
 def loadMovies():
   movies = {}
-  with open("./data/ml-lastest-small/movies.csv", "rb") as f:
+  with open("/home/maria_dev/Spark-practice/data/ml-latest-small/movies.csv", "rb") as f:
     reader = csv.reader(f, delimiter=',')
     next(reader)
     for row in reader:
@@ -20,9 +20,9 @@ if __name__ == "__main__":
   path = "hdfs://user/marai_dev/ml-lastest-small/ratings.csv"
 
   # create spark context
-  conf = SparkConf.setAppName("WorstMovies")
+  conf = SparkConf().setAppName("WorstMovies")
   sc = SparkContext(conf = conf)
-  
+
   # create RDD from text file
   lines = sc.textFile(path)
 
@@ -32,10 +32,11 @@ if __name__ == "__main__":
   )
 
   # line --> (movieId, (rating, 1.0))
-  ratings = line.map(parseInput)
+  ratings = lines.map(parseInput)
+
 
   # reduc to (movieId, (sumOfRating, countRating))
-  sumAndCounts = ratings.reducByKey(lambda m1, m2: (m1[0] + m2[0], m1[1] + m2[1]))
+  sumAndCounts = ratings.reduceByKey(lambda m1, m2:(m1[0]+m2[0], m1[1]+m2[1]))
 
   # sumAndCount --> (movieId, avrageRating)
   avrageRatings = sumAndCounts.mapValues(lambda v: v[0]/v[1])
@@ -43,8 +44,8 @@ if __name__ == "__main__":
   # sort
   sortedMovies = avrageRatings.srotBy(lambda x : x[1])
 
-  # top 10 
+  # top 10
   result = sortedMovies.take(10)
 
-  for result in results
-    print(movies[result[0]], result[1])
+  #for result in results:
+  print(movies[result[0]], result[1])
