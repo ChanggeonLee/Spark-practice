@@ -2,14 +2,14 @@ from pyspark.sql import SparkSession
 from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.ml.recommendation import ALS
 from pyspark.sql import Row
-from pyspark.sql.function import explode
+from pyspark.sql.functions import explode
 
 spark = SparkSession.builder.appName("CollabrativeFiltering").getOrCreate()
 
-ratings = spark.read.load("hdfs://user/maria_dev/ml-latest-small/ratings.csv", 
+ratings = spark.read.load("hdfs:///user/maria_dev/ml-latest-small/ratings.csv", 
                           format="csv", sep=",", inferSchema="true", header="true")
                           
-movies = spark.read.load("hdfs://user/maria_dev/ml-latest-small/movies.csv", 
+movies = spark.read.load("hdfs:///user/maria_dev/ml-latest-small/movies.csv", 
                           format="csv", sep=",", inferSchema="true", header="true")
 movies.createOrReplaceTempView("movies")
 
@@ -28,7 +28,7 @@ model = als.fit(training)
 
 # Evaluate the model
 predictions = model.transform(test)
-evaluator = RegressionEvaluator(metricName="rme", labelCol="rating",
+evaluator = RegressionEvaluator(metricName="rmse", labelCol="rating",
                               predictionCol="prediction")
 
 
@@ -64,7 +64,7 @@ model = als.fit(newRatings)
 
 user0Ratings = spark.sql("""
     SELECT title, rating
-    FROM rating JOIN movies ON ratings.movieId = movies.movieId
+    FROM ratings JOIN movies ON ratings.movieId = movies.movieId
     WHERE userId = 0
     """)
 
@@ -79,8 +79,8 @@ popularMovies = spark.sql("""
     GROUP BY movieId HAVING count(rating)> 00
     """)
 
-racommendations - model.transform(popularMovies)
-df = recommendation.join(movies, recommendations['movieId'] == movies[movies])
+recommendations = model.transform(popularMovies)
+df = recommendations.join(movies, recommendations['movieId'] == movies['movieId'])
 
 for row in df.sort(df.prediction.desc()).take(10):
   print(row.title, row.prediction)
