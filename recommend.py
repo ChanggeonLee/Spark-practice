@@ -30,12 +30,8 @@ model = als.fit(training)
 predictions = model.transform(test)
 evaluator = RegressionEvaluator(metricName="rmse", labelCol="rating",
                               predictionCol="prediction")
-
-
 rmse = evaluator.evaluate(predictions)
 print("Root-mean-square error = " + str(rmse))
-
-
 
 
 ######################################
@@ -76,7 +72,7 @@ print("Top Recommendation (rates over 100 times) ======================")
 popularMovies = spark.sql("""
     SELECT movieId, 0 as userId
     FROM ratings
-    GROUP BY movieId HAVING count(rating)> 00
+    GROUP BY movieId HAVING count(rating) > 100
     """)
 
 recommendations = model.transform(popularMovies)
